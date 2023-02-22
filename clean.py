@@ -1,5 +1,6 @@
 import argparse
 import json
+from lib2to3.pgen2.pgen import DFAState
 import logging
 from pathlib import Path
 import pandas as pd
@@ -60,8 +61,25 @@ def build_genre_column(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # TODO: define a function to create the audience column here
-def build_audience_column():
-    pass
+def build_audience_column(df: pd.DataFrame) -> pd.DataFrame:
+     """Creates a new column in the DataFrame called Audience that is based on the\
+    ItemCollection column.
+    @param df - the original DataFrame
+    @return a DataFrame with a new column added
+    """
+    json_path = Path('data/audience.json')
+    with open(json_path, 'r') as json_file:
+        audience_data = json.load(json_file)
+        audience_conditions = [
+            (df['ItemCollection'].isin(audience_data['Adult'])),
+            (df['ItemCollection'].isin(audience_data['Teen'])),
+            (df['ItemCollection'].isin(audience_data['Children']))
+            (df['ItemCollection'].isin(audience_data['Unknown']))
+        ]
+        audience_values = ['Adult', 'Teen', 'Children', 'Unknown']
+        df['audience'] = np.select(audience_conditions, audience_values)
+        return 
+    
 
 
 def main() -> None:
@@ -83,18 +101,31 @@ def main() -> None:
     validate_columns(books_df)
 
     # 1. TODO: Remove unneeded columns (ISBN, ReportDate)
-
+    logging.info('Step 1: Removing unneeded columns.')
+    books_df.drop(['ISBN','ReportDate'], axis=1, inplace=True)
 
 
     # 2. TODO: Remove records with empty and invalid PuublicationYear or ItemCollection.
-
+    logging.info('Step 2: Removing records with empty and invalid PublicationYear or ItemCollection.')
+    logging.debug(f'before dropping columns {books_df["ItemCollection"]}')
+    books_df.dropna(subset=['ItemCollection'], inplace=True)
+    logging.debug(f'before dropping columns {books_df["ItemCollection"]}')
+    
+    logging.debug(books_df['PublicationYear'] != 0)
+    logging.debug(f'before removing 0s {books_df["PublicationYear"]}')
+    books_df = books_df[books_df['PublicationYear'] != 0]
+    books_df = books_df[books_df['PublicationYear'] != 9999]
+    logging.debug(f'before removing 0s {books_df["PublicationYear"]}')
 
 
     # 3. TODO: Update incorrect values (PublicationYear 2109 -> 2019)
-
-
+    logging.info('Step 3: Update incorrect values (PulicationYear 2109 -> 2019')
+    books_df.replace(to_replace="2109", value="2019", inplace=True)
 
     # 4. TODO: Add genre and audience columns
+    logging.info('Step 4: Add genre and audience columns')
+    books_df = build_genre_column(books_df)
+    books_df = build_audience_column(books_df)
     
  
     logging.info('Saving output file.')
