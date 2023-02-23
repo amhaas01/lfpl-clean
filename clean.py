@@ -41,6 +41,19 @@ def validate_columns(df: pd.DataFrame) -> None:
     return None
 
 
+def validate_columns2(df2: pd.DataFrame) -> None:
+    """Validates that the data in the input file has the expected columns. \
+    Exits with an error if the expected columns are not present.
+    @param df - The DataFrame object with the data from the input file.
+    """
+    EXPECTED_COLUMNS = ['BibNum', 'Title', 'Author', 'ISBN', 'PublicationYear', 
+        'ItemType','ItemCollection', 'ItemLocation', 'ItemPrice', 'ReportDate']
+    if not all(item in list(df2.columns) for item in EXPECTED_COLUMNS):
+       logging.error('Input file does not have the expected columns.')
+       exit(1)
+    return None
+
+
 def build_genre_column(df: pd.DataFrame) -> pd.DataFrame:
     """Creates a new column in the DataFrame called Genre that is based on the\
     ItemCollection column.
@@ -62,7 +75,7 @@ def build_genre_column(df: pd.DataFrame) -> pd.DataFrame:
 
 # TODO: define a function to create the audience column here
 def build_audience_column(df: pd.DataFrame) -> pd.DataFrame:
-     """Creates a new column in the DataFrame called Audience that is based on the\
+    """Creates a new column in the DataFrame called Audience that is based on the\
     ItemCollection column.
     @param df - the original DataFrame
     @return a DataFrame with a new column added
@@ -73,12 +86,12 @@ def build_audience_column(df: pd.DataFrame) -> pd.DataFrame:
         audience_conditions = [
             (df['ItemCollection'].isin(audience_data['Adult'])),
             (df['ItemCollection'].isin(audience_data['Teen'])),
-            (df['ItemCollection'].isin(audience_data['Children']))
+            (df['ItemCollection'].isin(audience_data['Children'])),
             (df['ItemCollection'].isin(audience_data['Unknown']))
         ]
         audience_values = ['Adult', 'Teen', 'Children', 'Unknown']
         df['audience'] = np.select(audience_conditions, audience_values)
-        return 
+        return df
     
 
 
